@@ -145,22 +145,26 @@ namespace bullet_hell_game
         {
             GraphicsDevice.Clear(Color.CornflowerBlue);
 
+            _spriteBatch.Begin();
+            _background[0].Draw(_spriteBatch, 3);
+            _background[1].Draw(_spriteBatch, 3);
+            _spriteBatch.End();
+
+            float characterX = MathHelper.Clamp(_character.Body.Position.X, 0, 1632);
+            float offset = -characterX;
+            Matrix transform;
+
+            for (int i = 2; i < _background.Length; i++)
+            {
+                transform = Matrix.CreateTranslation(offset * ((float)i / _background.Length), 0, 0);
+                _spriteBatch.Begin(transformMatrix: transform);
+                _background[i].Draw(_spriteBatch, 3);
+                _spriteBatch.End();
+            }
 
             _spriteBatch.Begin();
 
-            int i = 0;
-            float xScale;
-            foreach (GenericBGSprite bgSprite in _background)
-            {
-                if (i < 2)
-                    xScale = 3;
-                else
-                    xScale = 1.5f;
 
-                bgSprite.Draw(_spriteBatch, GraphicsDevice.Viewport.Width, GraphicsDevice.Viewport.Height, xScale, 3);
-
-                i++;
-            }
 
             switch (_currentScene)
             {
