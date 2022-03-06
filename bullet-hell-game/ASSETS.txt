@@ -1,0 +1,10 @@
+﻿Content/BH_Title                           - Created by Connor Davis for use in this project, public domain
+Content/green-rectangle                    - Created by Connor Davis for use in this project, public domain
+Content/target							   - Created by Connor Davis for use in this project, public domain
+Content/parallax-mountain-bg               - Created by ansimuz and released opengameart.org under CC0
+Content/parallax-mountain-foreground-trees - Created by ansimuz and released opengameart.org under CC0
+Content/parallax-mountain-montain-far      - Created by ansimuz and released opengameart.org under CC0
+Content/parallax-mountain-mountains        - Created by ansimuz and released opengameart.org under CC0
+Content/parallax-mountain-trees            - Created by ansimuz and released opengameart.org under CC0
+Font/mechanical-font                       - Created by KeneticPlasma Fonts and released fontspace.com under the SIL Open Font Licensed
+into-the-night-20928                       - prazkhanal royality free on pixybay
