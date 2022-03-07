@@ -51,7 +51,7 @@ namespace bullet_hell_game
         {
             _inputManager.Update(time);
             Body.LinearVelocity = _inputManager.Velocity;
-            Body.AngularVelocity = 0f;
+            Body.Rotation = 0;
 
             _bulletManager.Update();
 
