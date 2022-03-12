@@ -12,25 +12,27 @@ using Microsoft.Xna.Framework.Audio;
 
 namespace bullet_hell_game
 {
-
     public class BulletManager
     {
+        public uint Score { get; private set; }
 
         private World _world;
         private Texture2D _texture;
         private ArrayList _bullets;
         private SoundEffect _shootSound;
+        private Game1 _game;
 
-        public BulletManager(World world)
+        public BulletManager(World world, Game1 game)
         {
             _world = world;
             _bullets = new ArrayList();
+            _game = game;
         }
 
         public Vector2 SpawnBullet(Vector2 startingPosition, Vector2 targetPosition)
         {
             var velocity = new Vector2();
-            _bullets.Add(new Bullet(_world, startingPosition, targetPosition, _texture, out velocity));
+            _bullets.Add(new Bullet(_world, startingPosition, targetPosition, _texture, _game, IncermentScore, out velocity));
             _shootSound.Play();
 
             return velocity;
@@ -64,6 +66,11 @@ namespace bullet_hell_game
             foreach (Bullet bullet in _bullets)
                 bullet.Draw(spriteBatch);
         }
+
+        public uint IncermentScore()
+        {
+            return Score++;
+        }
     }
 
     class Bullet
@@ -74,11 +81,13 @@ namespace bullet_hell_game
 
         private Vector2 _unitSize = new Vector2(8, 4);
         private Vector2 _origin = new Vector2(4, 2);
-        private float _unitSpeed = -60000;
+        private float _unitSpeed = -600000;
         private Texture2D _texture;
+        private Func<uint> _incermentScore;
+        private Game1 _game;
 
 
-        public Bullet(World world, Vector2 startingPosition, Vector2 targetPosition, Texture2D texture, out Vector2 velocity)
+        public Bullet(World world, Vector2 startingPosition, Vector2 targetPosition, Texture2D texture, Game1 game, Func<uint> incermentScore, out Vector2 velocity)
         {
             float x = startingPosition.X - targetPosition.X;
             float y = startingPosition.Y - targetPosition.Y;
@@ -89,6 +98,8 @@ namespace bullet_hell_game
             Body.LinearVelocity = TargetVelocity;
             Body.OnCollision += CollisionHandler;
 
+            _game = game;
+            _incermentScore = incermentScore;
             _texture = texture;
             velocity = TargetVelocity;
         }
@@ -105,6 +116,13 @@ namespace bullet_hell_game
 
         bool CollisionHandler(Fixture fixture, Fixture other, Contact contact)
         {
+            if (!Contact && _game.GetTargetFixtures().Contains(other))
+            {
+                _game.PlaceExposion(Body.Position);
+                _incermentScore();
+            }
+
+
             Contact = true;
             return true;
         }

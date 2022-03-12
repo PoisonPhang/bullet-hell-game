@@ -13,10 +13,9 @@ namespace bullet_hell_game
     public class Character
     {
         public Body Body { get; protected set; }
-
+        public BulletManager BulletManager { get; set; }
 
         private InputManager _inputManager;
-        private BulletManager _bulletManager;
         private Texture2D _texture;
         private World _world;
         private Color _spriteStatusColor;
@@ -26,7 +25,7 @@ namespace bullet_hell_game
         private uint _unitSpeed;
         private uint _unitJumpHieght;
 
-        public Character(World world, InputDevice inputDevice, Vector2 StartingPos, string textureAsset, Vector2 unitSize, uint unitSpeed, uint unitJumpHieght)
+        public Character(Game1 game, World world, InputDevice inputDevice, Vector2 StartingPos, string textureAsset, Vector2 unitSize, uint unitSpeed, uint unitJumpHieght)
         {
             _world = world;
             _textureAsset = textureAsset;
@@ -35,7 +34,7 @@ namespace bullet_hell_game
             _unitSpeed = unitSpeed;
             _unitJumpHieght = unitJumpHieght;
             _inputManager = new InputManager(inputDevice, _unitSize, _unitSpeed, _unitJumpHieght);
-            _bulletManager = new BulletManager(_world);
+            BulletManager = new BulletManager(_world, game);
             _spriteStatusColor = Color.White;
 
             Body = _world.CreateRectangle(_unitSize.X, _unitSize.Y, 1, StartingPos, 0, BodyType.Dynamic);
@@ -44,7 +43,7 @@ namespace bullet_hell_game
         public void LoadContent(ContentManager content)
         {
             _texture = content.Load<Texture2D>(_textureAsset);
-            _bulletManager.LoadContent(content);
+            BulletManager.LoadContent(content);
         }
 
         public void Update(GameTime time)
@@ -53,11 +52,11 @@ namespace bullet_hell_game
             Body.LinearVelocity = _inputManager.Velocity;
             Body.Rotation = 0;
 
-            _bulletManager.Update();
+            BulletManager.Update();
 
             if (_inputManager.Shoot && _inputManager.Target.X > Body.Position.X + _origin.X)
             {
-                Body.LinearVelocity -= _bulletManager.SpawnBullet(Body.Position + new Vector2(_origin.X + 8, 0), _inputManager.Target);
+                Body.LinearVelocity -= BulletManager.SpawnBullet(Body.Position + new Vector2(_origin.X + 8, 0), _inputManager.Target);
             }
         }
 
@@ -66,7 +65,7 @@ namespace bullet_hell_game
             if (_texture is null) throw new InvalidOperationException("Character's texture mustt be loaded with LoadContent() to render");
 
             spriteBatch.Draw(_texture, Body.Position, null, _spriteStatusColor, Body.Rotation, _origin, 1, SpriteEffects.None, 0);
-            _bulletManager.Draw(spriteBatch);
+            BulletManager.Draw(spriteBatch);
         }
     }
 }

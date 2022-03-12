@@ -6,6 +6,8 @@ using Microsoft.Xna.Framework.Media;
 using tainicom.Aether.Physics2D.Dynamics;
 using tainicom.Aether.Physics2D.Dynamics.Contacts;
 
+using bullet_hell_game.Particles;
+
 namespace bullet_hell_game
 {
     public enum Scene
@@ -18,6 +20,9 @@ namespace bullet_hell_game
     {
         private const string START_MESSAGE = "Press [Enter] to Continue";
         private const string EXIT_MESSAGE = "Press [ESC] to Quit";
+        private const string SHOOT_MESSAGE = "Aim with mouse, left click to shoot.";
+        private const int MAX_EXPLOSIONS = 128;
+        private const float GRAVITY = 16384;
 
         private GraphicsDeviceManager _graphics;
         private SpriteBatch _spriteBatch;
@@ -27,13 +32,15 @@ namespace bullet_hell_game
         private KeyboardState _currKeyboardState;
         private KeyboardState _lastKeyboardState;
 
+        private ExplosionParticleSystem _explosionParticleSystem;
+
         private BHTitleSprite _bhTitleSprite;
         private SpriteFont _mechanical;
         private GenericBGSprite[] _background;
         private Character _character;
-        private Target target;
+        private Target _target;
         private StaticFGSprite[] _fowardGround;
-        private Song music;
+        private Song _music;
 
 
         public Game1()
@@ -44,9 +51,12 @@ namespace bullet_hell_game
 
             _world = new World
             {
-                Gravity = new Vector2(0, 16384)
+                Gravity = new Vector2(0, GRAVITY)
             };
         }
+
+        public FixtureCollection GetTargetFixtures() => _target.GetFixtures();
+        public void PlaceExposion(Vector2 where) => _explosionParticleSystem.PlaceExplosion(where);
 
         protected override void Initialize()
         {
@@ -66,13 +76,12 @@ namespace bullet_hell_game
             _fowardGround = new StaticFGSprite[]
             {
                 new StaticFGSprite(_world, new Vector2(GraphicsDevice.Viewport.Width / 2, GraphicsDevice.Viewport.Height - 16), new Vector2(800, 16), "RedRectangle"),
-                //new StaticFGSprite(_world, new Vector2(GraphicsDevice.Viewport.Width - 400, GraphicsDevice.Viewport.Height - 400), new Vector2(400, 16), "RedRectangle"),
                 new StaticFGSprite(_world, new Vector2(0, GraphicsDevice.Viewport.Height - 128), new Vector2(400, 16), "RedRectangle"),
             };
 
-            target = new Target(_world, new Vector2(GraphicsDevice.Viewport.Width / 2, 64), new Vector2(32, 32), "target");
+            _target = new Target(_world, new Vector2(GraphicsDevice.Viewport.Width / 2, 64), new Vector2(32, 32), "target");
 
-            _character = new Character(_world, InputDevice.Keyboard, new Vector2(GraphicsDevice.Viewport.Width / 2 + 64, GraphicsDevice.Viewport.Height - 192), "green-rectangle", new Vector2(64, 128), 3, 2);
+            _character = new Character(this, _world, InputDevice.Keyboard, new Vector2(GraphicsDevice.Viewport.Width / 2 + 64, GraphicsDevice.Viewport.Height - 192), "green-rectangle", new Vector2(64, 128), 3, 2);
 
             var top = 0;
             var bottom = GraphicsDevice.Viewport.Height;
@@ -81,16 +90,19 @@ namespace bullet_hell_game
 
             var edges = new Body[]
             {
-            _world.CreateEdge(new Vector2(left, top), new Vector2(right, top)),
-            _world.CreateEdge(new Vector2(left, top), new Vector2(left, bottom)),
-            _world.CreateEdge(new Vector2(left, bottom), new Vector2(right, bottom)),
-            _world.CreateEdge(new Vector2(right, top), new Vector2(right, bottom))
+                _world.CreateEdge(new Vector2(left, top), new Vector2(right, top)),
+                _world.CreateEdge(new Vector2(left, top), new Vector2(left, bottom)),
+                _world.CreateEdge(new Vector2(left, bottom), new Vector2(right, bottom)),
+                _world.CreateEdge(new Vector2(right, top), new Vector2(right, bottom))
             };
 
             foreach (var edge in edges)
             {
                 edge.BodyType = BodyType.Static;
             }
+
+            _explosionParticleSystem = new ExplosionParticleSystem(this, MAX_EXPLOSIONS);
+            Components.Add(_explosionParticleSystem);
 
             base.Initialize();
         }
@@ -111,12 +123,12 @@ namespace bullet_hell_game
             }
 
 
-            target.LoadContent(Content);
-            music = Content.Load<Song>("into-the-night-20928");
+            _target.LoadContent(Content);
+            _music = Content.Load<Song>("into-the-night-20928");
             _character.LoadContent(Content);
 
             MediaPlayer.IsRepeating = true;
-            MediaPlayer.Play(music);
+            MediaPlayer.Play(_music);
 
             _mechanical = Content.Load<SpriteFont>("mechanical");
         }
@@ -135,7 +147,7 @@ namespace bullet_hell_game
 
             _character.Update(gameTime);
 
-            target.Update();
+            _target.Update();
 
             _world.Step((float)gameTime.ElapsedGameTime.TotalSeconds);
             base.Update(gameTime);
@@ -177,11 +189,13 @@ namespace bullet_hell_game
                         fgSprite.Draw(_spriteBatch);
                     }
                     _character.Draw(_spriteBatch);
-                    target.Draw(_spriteBatch);
+                    _target.Draw(_spriteBatch);
+
+                    _spriteBatch.DrawString(_mechanical, _character.BulletManager.Score.ToString(), Vector2.Zero, Color.White);
+                    _spriteBatch.DrawString(_mechanical, SHOOT_MESSAGE, new Vector2(GraphicsDevice.Viewport.Width / 2 - GetOffset(SHOOT_MESSAGE), GraphicsDevice.Viewport.Height - 26), Color.White);
                     break;
             }
 
-            _spriteBatch.DrawString(_mechanical, target.Score.ToString(), Vector2.Zero, Color.White);
 
 
             _spriteBatch.End();
