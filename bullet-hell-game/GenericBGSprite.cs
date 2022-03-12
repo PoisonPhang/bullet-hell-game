@@ -41,9 +41,9 @@ namespace bullet_hell_game
         /// Draw the sprite
         /// </summary>
         /// <param name="spriteBatch">Current SpriteBatch</param>
-        public void Draw(SpriteBatch spriteBatch, int width, int height, float xScale, float yScale)
+        public void Draw(SpriteBatch spriteBatch, float scale)
         {
-            spriteBatch.Draw(_texture, _position, new Rectangle(0, 0, width, height), Color.White, 0.0f, new Vector2(0, 0), new Vector2(xScale, yScale), SpriteEffects.None, 0.0f);
+            spriteBatch.Draw(_texture, _position, null, Color.White, 0.0f, new Vector2(0, 0), scale, SpriteEffects.None, 0.0f);
         }
     }
 }

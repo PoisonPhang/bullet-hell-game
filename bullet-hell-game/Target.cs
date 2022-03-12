@@ -14,15 +14,15 @@ namespace bullet_hell_game
     {
         public Body Body { get; protected set; }
         public bool Contact;
-        public int Score = 0;
 
         private Texture2D _texture;
         private Color _spiteColor;
         private Vector2 _unitSize;
+        private int _unitSpeed = 2;
         private Vector2 _origin;
         private Vector2 _velocity;
         private string _textureAsset;
-        private Vector2 _path;
+        private Random _random;
 
         public Target(World world, Vector2 position, Vector2 unitSize, string textureAsset)
         {
@@ -32,8 +32,9 @@ namespace bullet_hell_game
             _spiteColor = Color.White;
 
             Body = world.CreateRectangle(_unitSize.X, _unitSize.Y, 1, position, 0, BodyType.Dynamic);
-            _path = new Vector2(32, -world.Gravity.Y);
-            Body.LinearVelocity = _path;
+            _velocity = new Vector2(_unitSize.X * 3, _unitSize.Y + world.Gravity.Y);
+            Body.LinearVelocity = _velocity;
+            _random = new Random();
 
 
             Body.OnCollision += CollisionHandler;
@@ -48,14 +49,17 @@ namespace bullet_hell_game
         {
             if (Contact)
             {
-                Body.LinearVelocity = -Body.LinearVelocity * 2;
-                _path = Body.LinearVelocity * 3;
-                Contact = false;
+                _velocity = new Vector2(_random.Next((int)-_unitSize.X * _unitSpeed, (int)_unitSize.X * _unitSpeed), _random.Next((int)-_unitSize.Y * _unitSpeed, (int)_unitSize.Y * _unitSpeed));
+                _spiteColor = Color.Red;
+                _unitSpeed *= 2;
             }
             else
             {
-                Body.LinearVelocity = _path;
+                _spiteColor = Color.White;
             }
+
+            Body.LinearVelocity += _velocity;
+            Contact = false;
         }
 
         public void Draw(SpriteBatch spriteBatch)
@@ -63,10 +67,14 @@ namespace bullet_hell_game
             spriteBatch.Draw(_texture, Body.Position, new Rectangle(0, 0, (int)_unitSize.X, (int)_unitSize.Y), _spiteColor, Body.Rotation, _origin, Vector2.One, SpriteEffects.None, 0f);
         }
 
+        public FixtureCollection GetFixtures()
+        {
+            return Body.FixtureList;
+        }
+
         bool CollisionHandler(Fixture fixture, Fixture other, Contact contact)
         {
             Contact = true;
-            Score++;
             return true;
         }
     }
