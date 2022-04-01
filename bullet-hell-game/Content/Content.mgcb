@@ -10,6 +10,7 @@
 
 #-------------------------------- References --------------------------------#
 
+/reference:..\..\..\..\..\.nuget\packages\monogame.extended.content.pipeline\3.8.0\tools\MonoGame.Extended.Content.Pipeline.dll
 
 #---------------------------------- Content ---------------------------------#
 
@@ -49,23 +50,16 @@
 /processorParam:TextureFormat=Color
 /build:explosion.png
 
-#begin green-rectangle.png
-/importer:TextureImporter
-/processor:TextureProcessor
-/processorParam:ColorKeyColor=255,0,255,255
-/processorParam:ColorKeyEnabled=True
-/processorParam:GenerateMipmaps=False
-/processorParam:PremultiplyAlpha=True
-/processorParam:ResizeToPowerOfTwo=False
-/processorParam:MakeSquare=False
-/processorParam:TextureFormat=Color
-/build:green-rectangle.png
-
 #begin into-the-night-20928.mp3
 /importer:Mp3Importer
 /processor:SongProcessor
 /processorParam:Quality=Best
 /build:into-the-night-20928.mp3
+
+#begin map-01.tmx
+/importer:TiledMapImporter
+/processor:TiledMapProcessor
+/build:map-01.tmx
 
 #begin mechanical.spritefont
 /importer:FontDescriptionImporter
@@ -134,7 +128,7 @@
 /processorParam:TextureFormat=Color
 /build:parallax-mountain-trees.png
 
-#begin RedRectangle.png
+#begin red-player.png
 /importer:TextureImporter
 /processor:TextureProcessor
 /processorParam:ColorKeyColor=255,0,255,255
@@ -144,7 +138,7 @@
 /processorParam:ResizeToPowerOfTwo=False
 /processorParam:MakeSquare=False
 /processorParam:TextureFormat=Color
-/build:RedRectangle.png
+/build:red-player.png
 
 #begin shoot.wav
 /importer:WavImporter
@@ -163,4 +157,21 @@
 /processorParam:MakeSquare=False
 /processorParam:TextureFormat=Color
 /build:target.png
+
+#begin Tileset.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:Tileset.png
+
+#begin tileset.tsx
+/importer:TiledMapTilesetImporter
+/processor:TiledMapTilesetProcessor
+/build:tileset.tsx
 

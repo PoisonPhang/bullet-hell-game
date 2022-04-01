@@ -17,6 +17,7 @@ namespace bullet_hell_game
 
         private InputManager _inputManager;
         private Texture2D _texture;
+        private Game1 _game;
         private World _world;
         private Color _spriteStatusColor;
         private Vector2 _unitSize;
@@ -25,8 +26,9 @@ namespace bullet_hell_game
         private uint _unitSpeed;
         private uint _unitJumpHieght;
 
-        public Character(Game1 game, World world, InputDevice inputDevice, Vector2 StartingPos, string textureAsset, Vector2 unitSize, uint unitSpeed, uint unitJumpHieght)
+        public Character(Game1 game, World world, InputDevice inputDevice, Vector2 startingPos, string textureAsset, Vector2 unitSize, uint unitSpeed, uint unitJumpHieght)
         {
+            _game = game;
             _world = world;
             _textureAsset = textureAsset;
             _unitSize = unitSize;
@@ -36,8 +38,9 @@ namespace bullet_hell_game
             _inputManager = new InputManager(inputDevice, _unitSize, _unitSpeed, _unitJumpHieght);
             BulletManager = new BulletManager(_world, game);
             _spriteStatusColor = Color.White;
+            startingPos = new Vector2(startingPos.X, startingPos.Y - (_unitSize.Y / 2));
 
-            Body = _world.CreateRectangle(_unitSize.X, _unitSize.Y, 1, StartingPos, 0, BodyType.Dynamic);
+            Body = _world.CreateRectangle(_unitSize.X, _unitSize.Y, 1, startingPos, 0, BodyType.Dynamic);
         }
 
         public void LoadContent(ContentManager content)

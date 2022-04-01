@@ -32,8 +32,9 @@ namespace bullet_hell_game
             _spiteColor = Color.White;
 
             Body = world.CreateRectangle(_unitSize.X, _unitSize.Y, 1, position, 0, BodyType.Dynamic);
-            _velocity = new Vector2(_unitSize.X * 3, _unitSize.Y + world.Gravity.Y);
+            _velocity = new Vector2(_unitSize.X * 3, _unitSize.Y);
             Body.LinearVelocity = _velocity;
+            Body.IgnoreGravity = true;
             _random = new Random();
 
 
@@ -49,7 +50,16 @@ namespace bullet_hell_game
         {
             if (Contact)
             {
-                _velocity = new Vector2(_random.Next((int)-_unitSize.X * _unitSpeed, (int)_unitSize.X * _unitSpeed), _random.Next((int)-_unitSize.Y * _unitSpeed, (int)_unitSize.Y * _unitSpeed));
+                _velocity = new Vector2(
+                    _random.Next(
+                        (int)-_unitSize.X * _unitSpeed,
+                        (int)_unitSize.X * _unitSpeed
+                    ),
+                    _random.Next(
+                        (int)-_unitSize.Y * _unitSpeed,
+                        (int)_unitSize.Y * _unitSpeed
+                    )
+                );
                 _spiteColor = Color.Red;
                 _unitSpeed *= 2;
             }

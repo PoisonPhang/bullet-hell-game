@@ -1,8 +1,15 @@
-﻿using Microsoft.Xna.Framework;
+﻿using System;
+using System.IO;
+
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Audio;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using Microsoft.Xna.Framework.Media;
+
+using MonoGame.Extended.Tiled;
+using MonoGame.Extended.Tiled.Renderers;
+
 using tainicom.Aether.Physics2D.Dynamics;
 using tainicom.Aether.Physics2D.Dynamics.Contacts;
 
@@ -22,12 +29,14 @@ namespace bullet_hell_game
         private const string EXIT_MESSAGE = "Press [ESC] to Quit";
         private const string SHOOT_MESSAGE = "Aim with mouse, left click to shoot.";
         private const int MAX_EXPLOSIONS = 128;
-        private const float GRAVITY = 16384;
+        private const float GRAVITY = 8048;
 
         private GraphicsDeviceManager _graphics;
         private SpriteBatch _spriteBatch;
-        private Scene _currentScene;
         private World _world;
+        private TiledMap _tiledMap;
+        private TiledMapRenderer _tiledMapRenderer;
+        private Scene _currentScene;
 
         private KeyboardState _currKeyboardState;
         private KeyboardState _lastKeyboardState;
@@ -75,13 +84,10 @@ namespace bullet_hell_game
 
             _fowardGround = new StaticFGSprite[]
             {
-                new StaticFGSprite(_world, new Vector2(GraphicsDevice.Viewport.Width / 2, GraphicsDevice.Viewport.Height - 16), new Vector2(800, 16), "RedRectangle"),
-                new StaticFGSprite(_world, new Vector2(0, GraphicsDevice.Viewport.Height - 128), new Vector2(400, 16), "RedRectangle"),
             };
 
             _target = new Target(_world, new Vector2(GraphicsDevice.Viewport.Width / 2, 64), new Vector2(32, 32), "target");
 
-            _character = new Character(this, _world, InputDevice.Keyboard, new Vector2(GraphicsDevice.Viewport.Width / 2 + 64, GraphicsDevice.Viewport.Height - 192), "green-rectangle", new Vector2(64, 128), 3, 2);
 
             var top = 0;
             var bottom = GraphicsDevice.Viewport.Height;
@@ -109,7 +115,18 @@ namespace bullet_hell_game
 
         protected override void LoadContent()
         {
+            _tiledMap = Content.Load<TiledMap>("map-01");
+            _tiledMapRenderer = new TiledMapRenderer(GraphicsDevice, _tiledMap);
+            CreateMapBodies();
+
             _spriteBatch = new SpriteBatch(GraphicsDevice);
+
+            TiledMapRectangleObject spawn = (TiledMapRectangleObject)_tiledMap.GetLayer<TiledMapObjectLayer>("spawns").Objects.GetValue(0);
+
+            Vector2 spawnPoint = spawn.Position;
+
+            _character = new Character(this, _world, InputDevice.Keyboard, spawn.Position, "red-player", new Vector2(32, 32), 3, 2);
+
             _bhTitleSprite.LoadContent(Content);
 
             foreach (GenericBGSprite bgSprite in _background)
@@ -121,6 +138,7 @@ namespace bullet_hell_game
             {
                 fgSprite.LoadContent(Content);
             }
+
 
 
             _target.LoadContent(Content);
@@ -138,12 +156,13 @@ namespace bullet_hell_game
             _lastKeyboardState = _currKeyboardState;
             _currKeyboardState = Keyboard.GetState();
 
+            _tiledMapRenderer.Update(gameTime);
+
             if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || _currKeyboardState.IsKeyDown(Keys.Escape))
                 Exit();
 
             if (_currentScene == Scene.TitleScreen && _currKeyboardState.IsKeyDown(Keys.Enter) && _lastKeyboardState.IsKeyUp(Keys.Enter))
                 _currentScene = Scene.Game;
-
 
             _character.Update(gameTime);
 
@@ -157,6 +176,29 @@ namespace bullet_hell_game
         {
             GraphicsDevice.Clear(Color.CornflowerBlue);
 
+
+            DrawBackground();
+
+            _spriteBatch.Begin();
+
+            switch (_currentScene)
+            {
+                case Scene.TitleScreen:
+                    DrawTitleScreen(gameTime);
+                    break;
+                case Scene.Game:
+                    DrawFowardground();
+                    _tiledMapRenderer.Draw();
+                    break;
+            }
+
+            _spriteBatch.End();
+
+            base.Draw(gameTime);
+        }
+
+        private void DrawBackground()
+        {
             _spriteBatch.Begin();
             _background[0].Draw(_spriteBatch, 3);
             _background[1].Draw(_spriteBatch, 3);
@@ -173,34 +215,22 @@ namespace bullet_hell_game
                 _background[i].Draw(_spriteBatch, 3);
                 _spriteBatch.End();
             }
+        }
 
-            _spriteBatch.Begin();
-
-
-
-            switch (_currentScene)
+        private void DrawFowardground()
+        {
+            foreach (StaticFGSprite fgSprite in _fowardGround)
             {
-                case Scene.TitleScreen:
-                    DrawTitleScreen(gameTime);
-                    break;
-                case Scene.Game:
-                    foreach (StaticFGSprite fgSprite in _fowardGround)
-                    {
-                        fgSprite.Draw(_spriteBatch);
-                    }
-                    _character.Draw(_spriteBatch);
-                    _target.Draw(_spriteBatch);
-
-                    _spriteBatch.DrawString(_mechanical, _character.BulletManager.Score.ToString(), Vector2.Zero, Color.White);
-                    _spriteBatch.DrawString(_mechanical, SHOOT_MESSAGE, new Vector2(GraphicsDevice.Viewport.Width / 2 - GetOffset(SHOOT_MESSAGE), GraphicsDevice.Viewport.Height - 26), Color.White);
-                    break;
+                fgSprite.Draw(_spriteBatch);
             }
 
 
+            _character.Draw(_spriteBatch);
+            _target.Draw(_spriteBatch);
 
-            _spriteBatch.End();
+            _spriteBatch.DrawString(_mechanical, _character.BulletManager.Score.ToString(), Vector2.Zero, Color.White);
+            _spriteBatch.DrawString(_mechanical, SHOOT_MESSAGE, new Vector2(GraphicsDevice.Viewport.Width / 2 - GetOffset(SHOOT_MESSAGE), GraphicsDevice.Viewport.Height - 26), Color.White);
 
-            base.Draw(gameTime);
         }
 
         private void DrawTitleScreen(GameTime time)
@@ -223,6 +253,29 @@ namespace bullet_hell_game
         private float GetOffset(string message)
         {
             return _mechanical.MeasureString(message).X / 2;
+        }
+
+        private void CreateMapBodies()
+        {
+            TiledMapTileLayer layer = _tiledMap.GetLayer<TiledMapTileLayer>("ground");
+
+            int uX = layer.TileWidth;
+            int uY = layer.TileHeight;
+
+            foreach (TiledMapTile tile in layer.Tiles)
+            {
+                if (!tile.IsBlank)
+                {
+                    _world.CreateRectangle(
+                        uX,
+                        uY,
+                        1,
+                        new Vector2(tile.X * uX + uX / 2, tile.Y * uY + uY / 2),
+                        0,
+                        BodyType.Static);
+
+                }
+            }
         }
     }
 }
